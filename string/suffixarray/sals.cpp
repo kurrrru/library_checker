@@ -22,11 +22,11 @@ std::vector<int> suffixarray(const std::vector<int> &S)
 		for (int i = 0; i < n; ++i)
 		{
 			int rank = 0;
-			if (i + k < n) 
+			if (i + k < n)
 				rank = ISA[i + k];
 			cnt[rank]++;
 		}
-		for (int i = 1; i < cnt.size(); ++i) 
+		for (int i = 1; i < cnt.size(); ++i)
 			cnt[i] += cnt[i - 1];
 		for (int i = n - 1; i >= 0; --i)
 		{
