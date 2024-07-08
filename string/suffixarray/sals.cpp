@@ -72,7 +72,7 @@ int main()
 {
 	std::string s;
 	std::cin >> s;
-	int n = s.size();	
+	int n = s.size();
 	std::vector<int> S(n + 1);
 	for (int i = 0; i < n; i++)
 		S[i] = (int)s[i];
