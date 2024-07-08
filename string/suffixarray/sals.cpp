@@ -5,65 +5,42 @@ https://judge.yosupo.jp/submission/216206 : OK
 #include <vector>
 #include <string>
 #include <algorithm>
+#include <numeric>
 
 std::vector<int> suffixarray(const std::vector<int> &S)
 {
 	int n = S.size();
-	std::vector<int> SA(n), ISA(n), nextISA(n), cnt(std::max(n, 256), 0), nextSA(n);
+	std::vector<int> SA(n), ISA(n), nextISA(n);
 
-	for (int i = 0; i < n; ++i)
-	{
-		SA[i] = i;
-		ISA[i] = S[i];
-	}
+	std::iota(SA.begin(), SA.end(), 0);
+	std::sort(SA.begin(), SA.end(), [&](int i, int j) {return S[i] < S[j];});
+	ISA[SA[0]] = 0;
+	for (int i = 1; i < n; i++)
+		ISA[SA[i]] = ISA[SA[i - 1]] + (S[SA[i - 1]] != S[SA[i]]);
 	for (int k = 1; k < n; k *= 2)
 	{
-		std::fill(cnt.begin(), cnt.end(), 0);
-		for (int i = 0; i < n; ++i)
+		auto cmp = [&](int i, int j)
 		{
-			int rank = 0;
-			if (i + k < n)
-				rank = ISA[i + k];
-			cnt[rank]++;
-		}
-		for (int i = 1; i < cnt.size(); ++i)
-			cnt[i] += cnt[i - 1];
-		for (int i = n - 1; i >= 0; --i)
+			if (ISA[i] != ISA[j])
+				return ISA[i] < ISA[j];
+			int rank_i = i + k < n ? ISA[i + k] : -1;
+			int rank_j = j + k < n ? ISA[j + k] : -1;
+			return rank_i < rank_j;
+		};
+		int start = 0;
+		while (start < n)
 		{
-			int rank = 0;
-			if (SA[i] + k < n)
-				rank = ISA[SA[i] + k];
-			nextSA[--cnt[rank]] = SA[i];
+			int end = start + 1;
+			while (end < n && ISA[SA[start]] == ISA[SA[end]])
+				end++;
+			if (end - start > 1)
+				std::sort(SA.begin() + start, SA.begin() + end, cmp);
+			start = end;
 		}
-
-		std::fill(cnt.begin(), cnt.end(), 0);
-		for (int i = 0; i < n; ++i)
-			cnt[ISA[i]]++;
-		for (int i = 1; i < cnt.size(); ++i)
-			cnt[i] += cnt[i - 1];
-		for (int i = n - 1; i >= 0; --i)
-			SA[--cnt[ISA[nextSA[i]]]] = nextSA[i];
-
 		nextISA[SA[0]] = 0;
-		for (int i = 1; i < n; ++i)
-		{
-			if (ISA[SA[i]] != ISA[SA[i - 1]])
-				nextISA[SA[i]] = nextISA[SA[i - 1]] + 1;
-			else
-			{
-				int rank_i = -1;
-				if (SA[i] + k < n)
-					rank_i = ISA[SA[i] + k];
-				int rank_j = -1;
-				if (SA[i - 1] + k < n)
-					rank_j = ISA[SA[i - 1] + k];
-				if (rank_i != rank_j)
-					nextISA[SA[i]] = nextISA[SA[i - 1]] + 1;
-				else
-					nextISA[SA[i]] = nextISA[SA[i - 1]];
-			}
-		}
-		ISA = nextISA;
+		for (int i = 1; i < n; i++)
+			nextISA[SA[i]] = nextISA[SA[i - 1]] + cmp(SA[i - 1], SA[i]);
+		std::swap(ISA, nextISA);
 	}
 	return SA;
 }
@@ -73,14 +50,11 @@ int main()
 	std::string s;
 	std::cin >> s;
 	int n = s.size();
-	std::vector<int> S(n + 1);
+	std::vector<int> S(n);
 	for (int i = 0; i < n; i++)
 		S[i] = (int)s[i];
-	S[n] = 0;
 	std::vector<int> SA = suffixarray(S);
-	for (int i = 1; i <= n; i++)
-		std::cout << SA[i] << " \n"[i == n];
-	// for (int i = 0; i <= n; i++)
-	// 	std::cout << s.substr(SA[i]) << std::endl;
+	for (int i = 0; i < n; i++)
+		std::cout << SA[i] << " \n"[i == n - 1];
 	return 0;
 }
